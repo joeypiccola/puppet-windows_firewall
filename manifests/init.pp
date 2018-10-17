@@ -23,7 +23,8 @@
 #   include ::windows_firewall
 #
 class windows_firewall (
-  String $ensure = 'running',
+  Enum['stopped', 'running'] $ensure = 'running',
+  Boolean $enable = true,
 ) {
 
   case $::operatingsystemversion {
@@ -36,17 +37,22 @@ class windows_firewall (
   }
 
   if $ensure == 'running' {
-    $enabled = true
     $enabled_data = '1'
   } else {
-    $enabled = false
     $enabled_data = '0'
   }
 
+  if $enable == false  {
+    notice ( "enable is ${enable}, overriding ensure to stopped" )
+    $_ensure = 'stopped'
+  } else {
+    $_ensure = 'running'
+  }
+
   service { 'windows_firewall':
-    ensure => $ensure,
+    ensure => $_ensure,
     name   => $firewall_name,
-    enable => $enabled,
+    enable => $enable,
   }
 
   registry_value { 'EnableFirewallDomainProfile':
